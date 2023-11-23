@@ -75,7 +75,8 @@
 
                     <!-- @FIXME use a properly escaped variable that matches the URL context, for example
                     refer to a firstNameSafeURLString field on the doc object set by the controller for this template -->
-                    <a href="{{firstNameSafeString}}">Google search this profile by name</a>
+<!-- Corrected anchor tag with proper URL encoding and concatenation -->
+<a href="/search?name={{firstNameSafeURLString}}">Google search this profile by name</a>
                 </form>
             </div>
         </div>

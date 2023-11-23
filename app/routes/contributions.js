@@ -26,26 +26,16 @@ function ContributionsHandler(db) {
     };
 
     this.handleContributionsUpdate = (req, res, next) => {
+        // Secure parsing of inputs without using eval()
+        const preTax = parseInt(req.body.preTax, 10);
+        const afterTax = parseInt(req.body.afterTax, 10);
+        const roth = parseInt(req.body.roth, 10);
 
-        /*jslint evil: true */
-        // Insecure use of eval() to parse inputs
-        const preTax = eval(req.body.preTax);
-        const afterTax = eval(req.body.afterTax);
-        const roth = eval(req.body.roth);
+        const { userId } = req.session;
 
-        /*
-        //Fix for A1 -1 SSJS Injection attacks - uses alternate method to eval
-        const preTax = parseInt(req.body.preTax);
-        const afterTax = parseInt(req.body.afterTax);
-        const roth = parseInt(req.body.roth);
-        */
-        const {
-            userId
-        } = req.session;
-
-        //validate contributions
-        const validations = [isNaN(preTax), isNaN(afterTax), isNaN(roth), preTax < 0, afterTax < 0, roth < 0]
-        const isInvalid = validations.some(validation => validation)
+        // Validate contributions
+        const validations = [isNaN(preTax), isNaN(afterTax), isNaN(roth), preTax < 0, afterTax < 0, roth < 0];
+        const isInvalid = validations.some(validation => validation);
         if (isInvalid) {
             return res.render("contributions", {
                 updateError: "Invalid contribution percentages",
@@ -56,14 +46,13 @@ function ContributionsHandler(db) {
         // Prevent more than 30% contributions
         if (preTax + afterTax + roth > 30) {
             return res.render("contributions", {
-                updateError: "Contribution percentages cannot exceed 30 %",
+                updateError: "Contribution percentages cannot exceed 30%",
                 userId,
                 environmentalScripts
             });
         }
 
         contributionsDAO.update(userId, preTax, afterTax, roth, (err, contributions) => {
-
             if (err) return next(err);
 
             contributions.updateSuccess = true;
@@ -72,9 +61,6 @@ function ContributionsHandler(db) {
                 environmentalScripts
             });
         });
-
     };
-
 }
-
 module.exports = ContributionsHandler;

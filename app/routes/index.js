@@ -71,7 +71,34 @@ const index = (app, db) => {
     // Handle redirect for learning resources link
     app.get("/learn", isLoggedIn, (req, res) => {
         // Insecure way to handle redirects by taking redirect url from query string
-        return res.redirect(req.query.url);
+// Define an allow-list of trusted URLs
+const trustedUrls = [
+    'http://www.example.com/',
+    'https://www.anothertrusteddomain.com/',
+    // Add other trusted URLs here
+];
+
+// Middleware to validate the redirect URL against the allow-list
+const validateRedirectUrl = (req, res, next) => {
+    const redirectUrl = req.query.url;
+    if (trustedUrls.includes(redirectUrl)) {
+        next(); // URL is trusted, proceed with the redirect
+    } else {
+        // URL is not trusted, handle according to your security policy
+        // Option 1: Block the redirect and send an error message
+        // return res.status(400).send('Invalid redirect URL.');
+
+        // Option 2: Warn the user they are being redirected to an external site
+        // This could involve rendering a warning page with a link for the user to click
+        return res.render('externalRedirectWarning', { redirectUrl });
+    }
+};
+
+// Use the middleware in the route that handles the redirect
+app.get("/learn", isLoggedIn, validateRedirectUrl, (req, res) => {
+    // The URL has been validated against the allow-list and is safe to redirect to
+    return res.redirect(req.query.url);
+});
     });
 
     // Handle redirect for learning resources link
@@ -85,7 +112,22 @@ const index = (app, db) => {
         const {
             page
         } = req.params
-        return res.render(`tutorial/${page}`, {
+// Define an allow list of permitted pages
+const allowedPages = ['introduction', 'basics', 'advanced', 'summary'];
+
+// Validate the 'page' parameter
+const page = req.params.page; // or however you get the 'page' parameter from the user input
+
+// Check if the requested page is in the allow list
+if (allowedPages.includes(page)) {
+    // If the page is allowed, render it
+    return res.render(`tutorial/${page}`, {
+        // ... additional context properties for rendering
+    });
+} else {
+    // If the page is not allowed, render an error page or redirect to a safe default
+    return res.status(404).send('Page not found'); // or res.render('error', { error: 'Page not found' });
+}
             environmentalScripts
         });
     });
